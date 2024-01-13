@@ -1,0 +1,142 @@
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+class Product {
+    private String name;
+    private String category;
+    private double price;
+    private double tax;
+    private double discount;
+    private int id;
+
+    public Product(String name, String category, double price, double tax, double discount, int id) {
+        this.name = name;
+        this.category = category;
+        this.price = price;
+        this.tax = tax;
+        this.discount = discount;
+        this.id = id;
+    }
+
+    public double calculateFinalPrice() {
+        double discountedPrice = price - (price * discount);
+        return discountedPrice + (discountedPrice * tax);
+    }
+
+    public int getId() {
+        return id;
+    }
+}
+
+class Cart {
+    private int id;
+    private List<Product> products;
+    private double discount;
+
+    public Cart(int id) {
+        this.id = id;
+        this.products = new ArrayList<>();
+    }
+
+    public void addProduct(Product product) {
+        products.add(product);
+    }
+
+    public double calculateFinalPrice() {
+        double totalPrice = products.stream().mapToDouble(Product::calculateFinalPrice).sum();
+        return totalPrice - (totalPrice * discount);
+    }
+
+    public int getId() {
+        return id;
+    }
+}
+
+class Order {
+    private int id;
+    private List<Product> products;
+    private double discount;
+
+    public Order(int id, List<Product> products, double discount) {
+        this.id = id;
+        this.products = products;
+        this.discount = discount;
+    }
+
+    public double calculateFinalPrice() {
+        double totalPrice = products.stream().mapToDouble(Product::calculateFinalPrice).sum();
+        return totalPrice - (totalPrice * discount);
+    }
+
+    public int getId() {
+        return id;
+    }
+}
+
+class BackOffice {
+    private Map<String, List<Product>> productsByCategory;
+    private List<Double> discounts;
+    private List<Order> finishedOrders;
+
+    public BackOffice() {
+        this.productsByCategory = new HashMap<>();
+        this.discounts = new ArrayList<>();
+        this.finishedOrders = new ArrayList<>();
+    }
+
+    public void addProduct(Product product) {
+        productsByCategory.computeIfAbsent(product.getCategory(), k -> new ArrayList<>()).add(product);
+    }
+
+    public void addDiscount(double discount) {
+        discounts.add(discount);
+    }
+
+    public void finishOrder(Order order) {
+        finishedOrders.add(order);
+    }
+
+    public List<Product> getProductsByCategory(String category) {
+        return productsByCategory.getOrDefault(category, new ArrayList<>());
+    }
+
+    public List<Double> getDiscounts() {
+        return discounts;
+    }
+
+    public List<Order> getFinishedOrders() {
+        return finishedOrders;
+    }
+}
+
+public class ShopSystem {
+    public static void main(String[] args) {
+        // Example usage
+        Product laptop = new Product("Laptop", "Electronics", 1000.0, 0.1, 0.05, 1);
+        Product book = new Product("Book", "Books", 20.0, 0.05, 0.02, 2);
+
+        Cart cart = new Cart(1);
+        cart.addProduct(laptop);
+        cart.addProduct(book);
+
+        Order order = new Order(1, cart.getProducts(), 0.1);
+
+        BackOffice backOffice = new BackOffice();
+        backOffice.addProduct(laptop);
+        backOffice.addProduct(book);
+        backOffice.addDiscount(0.1);
+
+        backOffice.finishOrder(order);
+        
+        System.out.println("Cart Final Price: " + cart.calculateFinalPrice());
+        System.out.println("Order Final Price: " + order.calculateFinalPrice());
+
+        List<Order> finishedOrders = backOffice.getFinishedOrders();
+        System.out.println("Finished Orders:");
+        for (Order finishedOrder : finishedOrders) {
+            System.out.println("Order ID: " + finishedOrder.getId() + ", Final Price: " + finishedOrder.calculateFinalPrice());
+        }
+    }
+}
